@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: #{Name}#
+  namespace: #{NameSpace}#
+spec:
+  replicas: #{Replicas}#
+  selector: 
+    matchLabels:
+      name: #{Name}#
+  template:
+    metadata:
+      labels:
+        app: #{Name}#
+        name: #{Name}#
+    spec:
+      containers:
+        - name: #{Name}#
+          image: #{ContainerRegistry}#.azurecr.io/#{Name}#:#{Build.BuildId}#
+          env:
+            - name: clientid
+              valueFrom:
+                secretKeyRef:
+                  name: kv-secret
+                  key: client_id
+            - name: clientsecret
+              valueFrom:
+                secretKeyRef:
+                  name: kv-secret
+                  key: client_secret
+          ports:
+            - containerPort: 80
+      imagePullSecrets:
+        - name: acr-auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: #{Name}#
+  namespace: #{NameSpace}#
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  loadBalancerIP: #{ServiceIP}#
+  type: LoadBalancer
+  ports:
+    - port: 80
+  selector:
+    app: #{Name}#
